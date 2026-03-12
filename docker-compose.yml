@@ -1,33 +1,35 @@
 services:
   app:
     build: .
-    container_name: apinode-app
-    working_dir: /usr/src/app
-    volumes:
-      - ./:/usr/src/app
-      - /usr/src/app/node_modules
+    container_name: node-app
     ports:
       - "3000:3000"
-    environment:
-      - PORT=3000
-      - DATABASE_URL=postgresql://postgres:postgres@postgres:5432/apinode?schema=public
-      - NODE_ENV=development
-    depends_on:
-      - postgres
-    restart: unless-stopped
-
-  postgres:
-    image: postgres:16-alpine
-    container_name: apinode-postgres
-    ports:
-      - "5432:5432"
-    environment:
-      - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=postgres
-      - POSTGRES_DB=apinode
     volumes:
-      - postgres_data:/var/lib/postgresql/data
-    restart: unless-stopped
+      - .:/usr/src/app
+    environment:
+      - NODE_ENV=development
+      - DATABASE_URL=mongodb://admin:root@mongodb:27017/apinode?authSource=admin
+    networks:
+      - redeteste
+    depends_on:
+      - mongodb
+
+  mongodb:
+    image: mongo:latest
+    container_name: node-mongo
+    ports:
+      - "27017:27017"
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=admin
+      - MONGO_INITDB_ROOT_PASSWORD=root
+    volumes:
+      - dados_mongo:/data/db
+    networks:
+      - redeteste
+
+networks:
+  redeteste:
+    driver: bridge
 
 volumes:
-  postgres_data:
+  dados_mongo:

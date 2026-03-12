@@ -1,46 +1,39 @@
 // src/app.ts
 import fastify from 'fastify';
-import type { FastifyInstance, RequestGenericInterface } from 'fastify';
-import { PrismaClient } from '@prisma/client';
+import fastifyStatic from '@fastify/static';
+import path from 'path';
+import mongoose from 'mongoose';
+import { routes } from './routes';
 
-const prisma = new PrismaClient();
-const app: FastifyInstance = fastify({
-  logger: true // Enable logging using Pino
+const app = fastify({ logger: true });
+
+const mongoURI = process.env.DATABASE_URL || 'mongodb://admin:senhamongo@mongodb:27017/apinode?authSource=admin';
+
+mongoose.connect(mongoURI)
+  .then(() => console.log('MongoDB Conectado!'))
+  .catch(err => console.error('Erro ao conectar ao MongoDB:', err));
+
+app.register(fastifyStatic, {
+  root: path.join(__dirname, '..', 'public'),
+  prefix: '/',
 });
 
-// Define a simple health check route
-interface HealthCheckRequest extends RequestGenericInterface {
-  Reply: {
-    status: string;
-    timestamp: number;
-  };
-}
-
-app.get<HealthCheckRequest>('/healthcheck', async (request, reply) => {
-  return {
-    status: 'ok',
-    timestamp: Date.now()
-  };
-});
+app.register(routes);
 
 const start = async () => {
   try {
-    // Test database connection
-    await prisma.$connect();
-    app.log.info('Database connected successfully');
-    
-    // Listen on port 3000 and bind to 0.0.0.0 for external access
-    await app.listen({ port: 3000, host: '0.0.0.0' });
+    await app.listen({ port: 300l0, host: '0.0.0.0' });
+    console.log('Servidor rodando na porta 3000');
   } catch (err) {
     app.log.error(err);
     process.exit(1);
   }
 };
 
-// Graceful shutdown
 process.on('SIGINT', async () => {
-  await prisma.$disconnect();
+  await mongoose.disconnect();
   process.exit(0);
 });
 
 start();
+
