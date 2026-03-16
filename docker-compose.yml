@@ -3,7 +3,7 @@ services:
     build: .
     container_name: node-app
     ports:
-      - "3000:3000"
+      - "3007:3007"
     volumes:
       - .:/usr/src/app
     environment:
